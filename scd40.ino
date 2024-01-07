@@ -8,9 +8,9 @@
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
 
-const char* ssid = "OnHub"; // 替換為您的WiFi網絡名稱
-const char* password = "1122334455"; // 替換為您的WiFi密碼
-const char* googleScriptURL = "https://script.google.com/macros/s/AKfycbxY7Db6Yv6yMEPBcgiSxhRzKM-7cHiWWEVHwwhEPYY06W5B5E5WpiPqFO-yV00a71b3/exec"; // 替換為您的Google Apps Script的URL
+const char* ssid = "OnHub";
+const char* password = "1122334455";
+const char* googleScriptURL = "https://script.google.com/macros/s/AKfycbxY7Db6Yv6yMEPBcgiSxhRzKM-7cHiWWEVHwwhEPYY06W5B5E5WpiPqFO-yV00a71b3/exec";
 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire);
 SCD4x mySensor;
