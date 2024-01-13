@@ -8,12 +8,17 @@
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
 
-const char* ssid = "OnHub";
-const char* password = "1122334455";
+const char* ssid = "OnHub"; 
+const char* password = "1122334455"; 
 const char* googleScriptURL = "https://script.google.com/macros/s/AKfycbxY7Db6Yv6yMEPBcgiSxhRzKM-7cHiWWEVHwwhEPYY06W5B5E5WpiPqFO-yV00a71b3/exec";
 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire);
 SCD4x mySensor;
+
+unsigned long previousMillisLCD = 0;
+unsigned long previousMillisHTTP = 0;
+const long intervalLCD = 2000;
+const long intervalHTTP = 300000;
 
 void setup() {
   Serial.begin(115200);
@@ -42,45 +47,52 @@ void setup() {
 }
 
 void loop() {
-  mySensor.readMeasurement();
-  display.print("CO2:");
-  display.print(mySensor.getCO2());
-  display.println("ppm");
+  unsigned long currentMillis = millis();
 
-  display.print("T:");
-  display.print(mySensor.getTemperature());
-  display.println(" C");
+  // 每兩秒更新LCD
+  if (currentMillis - previousMillisLCD >= intervalLCD) {
+    previousMillisLCD = currentMillis;
 
-  display.print("H:");
-  display.print(mySensor.getHumidity());
-  display.println("%");
-
-  display.display();
-
-  if(WiFi.status() == WL_CONNECTED){
-    HTTPClient http;
-    String url = String(googleScriptURL) + "?temperature=" + mySensor.getTemperature() +
-                 "&humidity=" + mySensor.getHumidity() + 
-                 "&co2=" + mySensor.getCO2();
-    
-    
-    http.begin(url);
-
-    int httpCode = http.GET();
-
+    mySensor.readMeasurement();
     display.clearDisplay();
     display.setCursor(0, 0);
+    display.print("CO2:");
+    display.print(mySensor.getCO2());
+    display.println("ppm");
 
-    if (httpCode > 0) {
-      String payload = http.getString();
-      Serial.println("Data sent successfully");
-    } else {
-      Serial.println("Error sending data");
-      Serial.println(httpCode);
-    }
+    display.print("T:");
+    display.print(mySensor.getTemperature());
+    display.println(" C");
 
-    http.end();
+    display.print("H:");
+    display.print(mySensor.getHumidity());
+    display.println("%");
+
+    display.display();
   }
 
-  delay(60000); // Update every 60 seconds
+  // 每5分鐘發送一次數據
+  if(currentMillis - previousMillisHTTP >= intervalHTTP){
+    previousMillisHTTP = currentMillis;
+
+    if(WiFi.status() == WL_CONNECTED){
+      HTTPClient http;
+      String url = String(googleScriptURL) + "?temperature=" + mySensor.getTemperature() +
+                   "&humidity=" + mySensor.getHumidity() + 
+                   "&co2=" + mySensor.getCO2();
+      
+      http.begin(url);
+      int httpCode = http.GET();
+
+      if (httpCode > 0) {
+        String payload = http.getString();
+        Serial.println("Data sent successfully");
+      } else {
+        Serial.println("Error sending data");
+        Serial.println(httpCode);
+      }
+
+      http.end();
+    }
+  }
 }
